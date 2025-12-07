@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenith MDX Pro</title>
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        bg: '#18181b', // Zinc 900
+                        surface: '#27272a', // Zinc 800
+                        accent: '#3b82f6', // Blue 500
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans JP', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml/dist/js-yaml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    
+    <!-- Extensions -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-katex-extension/lib/index.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-footnote/dist/index.umd.min.js"></script>
+
+    <!-- Highlight.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-highlight/lib/index.umd.js"></script>
+
+    <!-- Fonts -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+        :root {
+            --accent-color: #3b82f6;
+            --bg-base: #18181b;
+            --bg-panel: #27272a;
+            --text-main: #e4e4e7;
+            --text-muted: #a1a1aa;
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Glass Effect */
+        .glass {
+            background: rgba(39, 39, 42, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .glass-panel {
+            background: rgba(39, 39, 42, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #52525b; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: #71717a; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* --- Editor Styling --- */
+        #editor-textarea {
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.7;
+            caret-color: var(--accent-color);
+        }
+        #editor-textarea::placeholder { opacity: 0.3; }
+
+        /* --- Preview Styles (Astro Erudite Modernized) --- */
+        .preview-content {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #d4d4d8; /* Zinc 300 */
+        }
+
+        /* Typography */
+        .preview-content h1 { 
+            font-size: 2.25em; 
+            font-weight: 800; 
+            margin: 1.5em 0 0.8em; 
+            line-height: 1.2; 
+            color: #f4f4f5; /* Zinc 100 */
+            letter-spacing: -0.025em;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 0.3em;
+        }
+        
+        .preview-content h2 { 
+            font-size: 1.75em; 
+            font-weight: 700; 
+            margin: 2em 0 1em; 
+            color: #e4e4e7; /* Zinc 200 */
+            letter-spacing: -0.025em;
+            display: flex;
+            align-items: center;
+        }
+        .preview-content h2::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 1.2em;
+            background: var(--accent-color);
+            margin-right: 0.5em;
+            border-radius: 2px;
+        }
+
+        .preview-content h3 { 
+            font-size: 1.4em; 
+            font-weight: 600; 
+            margin: 1.5em 0 0.8em; 
+            color: #d4d4d8; 
+        }
+
+        .preview-content p { margin-bottom: 1.5em; line-height: 1.625; }
+        
+        /* Lists */
+        .preview-content ul { list-style: disc; margin-bottom: 1.5em; padding-left: 1.5em; marker: #71717a; }
+        .preview-content ol { list-style: decimal; margin-bottom: 1.5em; padding-left: 1.5em; marker: #71717a; }
+        .preview-content li { margin-bottom: 0.5em; }
+
+        /* Links */
+        .preview-content a { 
+            color: #60a5fa; 
+            text-decoration: none; 
+            border-bottom: 1px solid transparent; 
+            transition: border-color 0.2s; 
+        }
+        .preview-content a:hover { border-bottom-color: #60a5fa; }
+
+        /* Blockquote */
+        .preview-content blockquote {
+            border-left: 3px solid var(--accent-color);
+            background: rgba(59, 130, 246, 0.1);
+            padding: 1rem 1.25rem;
+            margin: 1.5em 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+            color: #a1a1aa;
+            font-style: italic;
+        }
+        .preview-content blockquote p:last-child { margin-bottom: 0; }
+
+        /* Code Blocks (Mac Style) */
+        .preview-content pre {
+            background: #1e1e20; /* Darker than bg */
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 0.75rem;
+            margin: 1.5em 0;
+            padding: 1rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Language Badge / Mac Buttons */
+        .preview-content pre::before {
+            content: '';
+            display: block;
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ef4444; /* Red */
+            box-shadow: 20px 0 0 #eab308, 40px 0 0 #22c55e; /* Yellow, Green */
+            z-index: 2;
+        }
+        
+        .preview-content pre code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+            display: block;
+            padding-top: 1.5rem; /* Space for buttons */
+            overflow-x: auto;
+            background: transparent !important; /* Override hljs bg */
+        }
+
+        /* Inline Code (Updated for clearer distinction) */
+        .preview-content :not(pre) > code {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fca5a5; /* Red/Pink tint for inline */
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            padding: 0.2em 0.5em;
+            border-radius: 0.3em;
+            border: 1px solid rgba(255,255,255,0.1); /* Subtle border */
+            display: inline-block; /* Ensure proper spacing */
+            vertical-align: middle;
+        }
+
+        /* Tables */
+        .preview-content table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 1.5em 0;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .preview-content th { background: rgba(255,255,255,0.05); font-weight: 600; text-align: left; padding: 0.75rem; border-bottom: 1px solid var(--border-color); }
+        .preview-content td { padding: 0.75rem; border-bottom: 1px solid var(--border-color); }
+        .preview-content tr:last-child td { border-bottom: none; }
+
+        /* Images */
+        .preview-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.75rem;
+            margin: 2em auto;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Horizontal Rule */
+        .preview-content hr { border: 0; border-top: 1px solid var(--border-color); margin: 3em 0; }
+
+        /* Accordion */
+        .preview-content details {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            margin-bottom: 1em;
+            overflow: hidden;
+        }
+        .preview-content summary {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            background: rgba(255,255,255,0.02);
+            transition: background 0.2s;
+            outline: none;
+            user-select: none;
+        }
+        .preview-content summary:hover { background: rgba(255,255,255,0.05); }
+        .preview-content details[open] summary { border-bottom: 1px solid var(--border-color); }
+        .preview-content details > div { padding: 1rem; }
+
+        /* Footnotes */
+        .preview-content .footnotes {
+            margin-top: 3em;
+            padding-top: 1.5em;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.85em;
+            color: var(--text-muted);
+        }
+
+        /* --- UI Components --- */
+        .btn-icon {
+            @apply p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-200;
+        }
+        .btn-toolbar {
+            @apply p-2 rounded-md text-zinc-400 hover:text-blue-400 hover:bg-white/5 transition-all duration-200 flex items-center justify-center relative;
+        }
+        .btn-toolbar:active { transform: scale(0.95); }
+
+        /* Tooltip */
+        #tooltip {
+            position: fixed;
+            z-index: 1000;
+            background: #18181b;
+            border: 1px solid #3f3f46;
+            color: #e4e4e7;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(4px);
+            transition: opacity 0.15s, transform 0.15s;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        /* Context Menu */
+        #context-menu {
+            transform-origin: top left;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Overlay -->
+    <div id="loader" class="fixed inset-0 z-[100] flex items-center justify-center bg-[#18181b]">
+        <div class="flex flex-col items-center gap-4">
+            <div class="w-12 h-12 border-[3px] border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+            <div class="text-zinc-500 text-sm tracking-wider font-medium animate-pulse">ZENITH PRO</div>
+        </div>
+    </div>
+
+    <!-- Tooltip Element -->
+    <div id="tooltip"></div>
+
+    <!-- Welcome Modal -->
+    <div id="welcome-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none">
+        <div class="glass-panel w-full max-w-md rounded-2xl p-8 transform scale-95 transition-all duration-300">
+            <div class="flex flex-col items-center mb-8">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 mb-4">
+                    <i data-lucide="pen-tool" class="w-8 h-8"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight">Zenith MDX Pro</h1>
+                <p class="text-zinc-500 text-sm mt-2">Immersive Dark Mode Editor</p>
+            </div>
+            
+            <div class="space-y-3">
+                <button onclick="app.newDoc()" class="w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-blue-500/10 border border-white/5 hover:border-blue-500/30 transition-all group text-left">
+                    <div class="bg-blue-500/20 p-2 rounded-lg text-blue-400 group-hover:scale-110 transition-transform"><i data-lucide="file-plus" class="w-5 h-5"></i></div>
+                    <div>
+                        <div class="font-semibold text-zinc-200">New Post</div>
+                        <div class="text-xs text-zinc-500">Create from scratch</div>
+                    </div>
+                </button>
+                
+                <button onclick="document.getElementById('file-input').click()" class="w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-green-500/10 border border-white/5 hover:border-green-500/30 transition-all group text-left">
+                    <div class="bg-green-500/20 p-2 rounded-lg text-green-400 group-hover:scale-110 transition-transform"><i data-lucide="folder-open" class="w-5 h-5"></i></div>
+                    <div>
+                        <div class="font-semibold text-zinc-200">Open File</div>
+                        <div class="text-xs text-zinc-500">Import .md / .mdx</div>
+                    </div>
+                    <input type="file" id="file-input" class="hidden" accept=".md,.mdx,.txt" onchange="app.handleFileUpload(this.files[0])">
+                </button>
+
+                <button id="restore-btn" onclick="app.restoreSession()" class="hidden w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-purple-500/10 border border-white/5 hover:border-purple-500/30 transition-all group text-left">
+                    <div class="bg-purple-500/20 p-2 rounded-lg text-purple-400 group-hover:scale-110 transition-transform"><i data-lucide="history" class="w-5 h-5"></i></div>
+                    <div>
+                        <div class="font-semibold text-zinc-200">Restore Session</div>
+                        <div class="text-xs text-zinc-500">Continue where you left off</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200">
+        <div class="glass-panel w-full max-w-lg rounded-2xl p-6 transform scale-95 transition-transform duration-200">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <i data-lucide="settings" class="w-5 h-5 text-blue-500"></i> Settings
+                </h2>
+                <button onclick="app.toggleSettings()" class="p-1 hover:bg-white/10 rounded-full transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6 overflow-y-auto max-h-[60vh] pr-2 custom-scrollbar">
+                
+                <!-- Editor Settings -->
+                <div>
+                    <h3 class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Editor</h3>
+                    <div class="space-y-3">
+                         <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                            <span class="text-sm font-medium">Font Size</span>
+                            <select id="setting-fontsize" class="bg-black/20 border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-blue-500 transition-colors" onchange="app.updateEditorSettings()">
+                                <option value="14px">14px</option>
+                                <option value="15px" selected>15px</option>
+                                <option value="16px">16px</option>
+                                <option value="18px">18px</option>
+                            </select>
+                        </div>
+                         <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                            <span class="text-sm font-medium">Word Wrap</span>
+                            <input type="checkbox" id="setting-wordwrap" class="accent-blue-500" onchange="app.updateEditorSettings()" checked>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shortcuts -->
+                <div>
+                    <h3 class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Shortcuts (Ctrl + Key)</h3>
+                    <div class="space-y-2" id="shortcuts-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 pt-4 border-t border-white/5 flex justify-end">
+                <button onclick="app.resetShortcuts()" class="text-xs text-red-400 hover:text-red-300 mr-auto px-2">Reset Defaults</button>
+                <button onclick="app.toggleSettings()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-blue-500/20">Done</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Main Application -->
+    <div id="main-app" class="flex flex-col h-screen opacity-0 transition-opacity duration-700">
+        
+        <!-- Header -->
+        <header class="h-14 flex-none glass flex items-center justify-between px-5 z-30">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 text-blue-400 font-bold tracking-wide">
+                    <i data-lucide="box" class="w-5 h-5"></i>
+                    <span>ZENITH</span>
+                </div>
+                <div class="h-4 w-px bg-white/10"></div>
+                <div class="flex flex-col">
+                    <span id="doc-title-display" class="text-xs font-medium text-zinc-300">Untitled</span>
+                    <span id="save-status" class="text-[10px] text-zinc-500 transition-colors">All changes saved</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button onclick="app.toggleSettings()" class="btn-icon" title="Settings">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                </button>
+                <button onclick="app.toggleMeta()" class="btn-icon" title="Toggle Metadata">
+                    <i data-lucide="panel-left" class="w-5 h-5"></i>
+                </button>
+                <div class="h-4 w-px bg-white/10 mx-1"></div>
+                <button onclick="app.exportFile()" class="flex items-center gap-2 px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg shadow-lg shadow-blue-500/20 transition-all active:scale-95">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>Export</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Formatting Toolbar -->
+        <div class="h-12 flex-none bg-[#18181b] border-b border-white/5 flex items-center px-4 gap-1 overflow-x-auto no-scrollbar z-20">
+            <button class="btn-toolbar" onclick="editor.format('heading', 1)" data-tooltip="Heading 1"><i data-lucide="heading-1" class="w-4 h-4"></i></button>
+            <button class="btn-toolbar" onclick="editor.format('heading', 2)" data-tooltip="Heading 2"><i data-lucide="heading-2" class="w-4 h-4"></i></button>
+            <button class="btn-toolbar" onclick="editor.format('heading', 3)" data-tooltip="Heading 3"><i data-lucide="heading-3" class="w-4 h-4"></i></button>
+            
+            <div class="w-px h-5 bg-white/10 mx-2"></div>
+            
+            <button class="btn-toolbar" onclick="editor.format('bold')" data-tooltip="Bold"><i data-lucide="bold" class="w-4 h-4"></i></button>
+            <button class="btn-toolbar" onclick="editor.format('italic')" data-tooltip="Italic"><i data-lucide="italic" class="w-4 h-4"></i></button>
+            <button class="btn-toolbar" onclick="editor.format('strike')" data-tooltip="Strike"><i data-lucide="strikethrough" class="w-4 h-4"></i></button>
+            
+            <div class="w-px h-5 bg-white/10 mx-2"></div>
+            
+            <button class="btn-toolbar" onclick="editor.format('list')" data-tooltip="List"><i data-lucide="list" class="w-4 h-4"></i></button>
+            <button class="btn-toolbar" onclick="editor.format('ordered')" data-tooltip="Ordered"><i data-lucide="list-ordered" class="w-4 h-4"></i></button>
+            <button class="btn-toolbar" onclick="editor.format('task')" data-tooltip="Task"><i data-lucide="check-square" class="w-4 h-4"></i></button>
+            
+            <div class="w-px h-5 bg-white/10 mx-2"></div>
+            
+            <button class="btn-toolbar" onclick="editor.format('code')" data-tooltip="Code Block"><i data-lucide="code-2" class="w-4 h-4"></i></button>
+            <button class="btn-toolbar" onclick="editor.format('quote')" data-tooltip="Quote"><i data-lucide="quote" class="w-4 h-4"></i></button>
+            <button class="btn-toolbar" onclick="editor.format('link')" data-tooltip="Link"><i data-lucide="link" class="w-4 h-4"></i></button>
+            <button class="btn-toolbar" onclick="editor.format('image')" data-tooltip="Image"><i data-lucide="image" class="w-4 h-4"></i></button>
+            <button class="btn-toolbar" onclick="editor.format('file')" data-tooltip="File"><i data-lucide="file" class="w-4 h-4"></i></button>
+            
+            <div class="w-px h-5 bg-white/10 mx-2"></div>
+            
+            <button class="btn-toolbar" onclick="editor.format('table')" data-tooltip="Table"><i data-lucide="table" class="w-4 h-4"></i></button>
+            <button class="btn-toolbar" onclick="editor.format('math')" data-tooltip="Math"><i data-lucide="sigma" class="w-4 h-4"></i></button>
+            <button class="btn-toolbar" onclick="editor.format('details')" data-tooltip="Accordion"><i data-lucide="chevron-down-square" class="w-4 h-4"></i></button>
+            <button class="btn-toolbar" onclick="editor.format('footnote')" data-tooltip="Footnote"><i data-lucide="superscript" class="w-4 h-4"></i></button>
+        </div>
+
+        <!-- Main Workspace -->
+        <div class="flex-1 flex overflow-hidden relative">
+            
+            <!-- Metadata Sidebar -->
+            <aside id="meta-sidebar" class="absolute left-0 top-0 bottom-0 z-40 w-[320px] bg-[#18181b]/95 backdrop-blur-xl border-r border-white/5 shadow-2xl transform -translate-x-full transition-transform duration-300 flex flex-col">
+                <div class="p-4 flex items-center justify-between border-b border-white/5">
+                    <span class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Frontmatter</span>
+                    <button onclick="app.toggleMeta()" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+                </div>
+                <div class="p-6 space-y-5 overflow-y-auto flex-1">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-zinc-400 ml-1">Title</label>
+                        <input id="meta-title" type="text" class="w-full bg-white/5 border border-white/5 focus:border-blue-500/50 rounded-lg px-3 py-2.5 text-sm text-zinc-200 outline-none transition-all placeholder-zinc-600" placeholder="Post Title">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-zinc-400 ml-1">Slug</label>
+                        <input id="meta-slug" type="text" class="w-full bg-white/5 border border-white/5 focus:border-blue-500/50 rounded-lg px-3 py-2.5 text-sm text-zinc-200 outline-none transition-all placeholder-zinc-600" placeholder="post-slug">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-zinc-400 ml-1">Date</label>
+                        <input id="meta-date" type="date" class="w-full bg-white/5 border border-white/5 focus:border-blue-500/50 rounded-lg px-3 py-2.5 text-sm text-zinc-200 outline-none transition-all">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-zinc-400 ml-1">Authors</label>
+                        <input id="meta-authors" type="text" class="w-full bg-white/5 border border-white/5 focus:border-blue-500/50 rounded-lg px-3 py-2.5 text-sm text-zinc-200 outline-none transition-all placeholder-zinc-600" placeholder="Name 1, Name 2">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-zinc-400 ml-1">Tags</label>
+                        <input id="meta-tags" type="text" class="w-full bg-white/5 border border-white/5 focus:border-blue-500/50 rounded-lg px-3 py-2.5 text-sm text-zinc-200 outline-none transition-all placeholder-zinc-600" placeholder="React, Tech, ...">
+                    </div>
+                    
+                    <div class="pt-4 border-t border-white/5 grid grid-cols-2 gap-3">
+                         <label class="flex items-center gap-3 p-3 rounded-lg bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                            <input id="meta-featured" type="checkbox" class="accent-blue-500 w-4 h-4">
+                            <span class="text-sm font-medium text-zinc-300">Featured</span>
+                        </label>
+                         <label class="flex items-center gap-3 p-3 rounded-lg bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                            <input id="meta-draft" type="checkbox" class="accent-amber-500 w-4 h-4">
+                            <span class="text-sm font-medium text-zinc-300">Draft</span>
+                        </label>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Editor Pane -->
+            <div class="flex-1 flex flex-col md:flex-row h-full">
+                <!-- Write -->
+                <div class="flex-1 h-1/2 md:h-full relative bg-[#18181b]">
+                    <textarea id="editor-textarea" class="w-full h-full resize-none p-8 bg-transparent outline-none text-[15px] text-zinc-300 overflow-y-auto custom-scrollbar"
+                    spellcheck="false" placeholder="Start writing your story..."></textarea>
+                </div>
+                
+                <!-- Divider -->
+                <div class="hidden md:block w-px bg-white/10 relative z-10"></div>
+
+                <!-- Preview -->
+                <div class="flex-1 h-1/2 md:h-full bg-[#1c1c1e] relative">
+                    <div id="preview-container" class="preview-content w-full h-full p-8 md:p-12 overflow-y-auto pb-32">
+                        <!-- Content Rendered Here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="context-menu" class="fixed hidden z-50 glass-panel rounded-lg py-1 w-48 text-sm text-zinc-300">
+        <div class="px-3 py-1.5 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Insert</div>
+        <button onclick="editor.format('heading', 2)" class="w-full text-left px-4 py-2 hover:bg-blue-600 hover:text-white flex items-center gap-2"><i data-lucide="heading-2" class="w-3.5 h-3.5"></i> H2 Heading</button>
+        <button onclick="editor.format('code')" class="w-full text-left px-4 py-2 hover:bg-blue-600 hover:text-white flex items-center gap-2"><i data-lucide="code-2" class="w-3.5 h-3.5"></i> Code Block</button>
+        <div class="h-px bg-white/10 my-1"></div>
+        <button onclick="editor.format('bold')" class="w-full text-left px-4 py-2 hover:bg-blue-600 hover:text-white flex items-center gap-2"><i data-lucide="bold" class="w-3.5 h-3.5"></i> Bold</button>
+        <button onclick="editor.format('link')" class="w-full text-left px-4 py-2 hover:bg-blue-600 hover:text-white flex items-center gap-2"><i data-lucide="link" class="w-3.5 h-3.5"></i> Link</button>
+        <div class="h-px bg-white/10 my-1"></div>
+        <button onclick="editor.format('table')" class="w-full text-left px-4 py-2 hover:bg-blue-600 hover:text-white flex items-center gap-2"><i data-lucide="table" class="w-3.5 h-3.5"></i> Table</button>
+    </div>
+
+    <script>
+        const app = {
+            state: {
+                meta: { title: '', slug: '', date: new Date().toISOString().split('T')[0], tags: [], authors: [], featured: false, draft: false },
+                content: '',
+                config: {
+                    shortcuts: {
+                        'b': 'bold',
+                        'i': 'italic',
+                        's': 'save', // trigger save
+                        'k': 'link',
+                        'enter': 'task' // Example, currently handled in handleKey logic mostly
+                    },
+                    editor: {
+                        fontSize: '15px',
+                        wordWrap: true
+                    }
+                }
+            },
+            
+            init() {
+                lucide.createIcons();
+                this.loadConfig();
+                this.setupMarked();
+                this.setupEvents();
+                this.checkSession();
+                
+                // Entrance Animation
+                gsap.to('#loader', { opacity: 0, duration: 0.6, ease: "power2.inOut", onComplete: () => {
+                    document.getElementById('loader').style.display = 'none';
+                    if (!this.hasSession) this.showWelcome();
+                }});
+            },
+
+            loadConfig() {
+                const stored = localStorage.getItem('zenith_config');
+                if (stored) {
+                    try {
+                        const parsed = JSON.parse(stored);
+                        this.state.config = { ...this.state.config, ...parsed };
+                    } catch(e) {}
+                }
+                this.applyEditorSettings();
+            },
+
+            saveConfig() {
+                localStorage.setItem('zenith_config', JSON.stringify(this.state.config));
+            },
+
+            applyEditorSettings() {
+                const ta = document.getElementById('editor-textarea');
+                ta.style.fontSize = this.state.config.editor.fontSize;
+                ta.style.whiteSpace = this.state.config.editor.wordWrap ? 'pre-wrap' : 'pre';
+                
+                // Update UI in Settings
+                document.getElementById('setting-fontsize').value = this.state.config.editor.fontSize;
+                document.getElementById('setting-wordwrap').checked = this.state.config.editor.wordWrap;
+            },
+            
+            updateEditorSettings() {
+                const fs = document.getElementById('setting-fontsize').value;
+                const ww = document.getElementById('setting-wordwrap').checked;
+                
+                this.state.config.editor = { fontSize: fs, wordWrap: ww };
+                this.applyEditorSettings();
+                this.saveConfig();
+            },
+
+            // --- Settings & Shortcuts Logic ---
+            toggleSettings() {
+                const modal = document.getElementById('settings-modal');
+                const isHidden = modal.classList.contains('opacity-0');
+                
+                if (isHidden) {
+                    this.renderShortcutsList();
+                    modal.classList.remove('pointer-events-none');
+                    modal.classList.remove('opacity-0');
+                    modal.querySelector('.glass-panel').classList.remove('scale-95');
+                } else {
+                    modal.classList.add('opacity-0');
+                    modal.classList.add('pointer-events-none');
+                    modal.querySelector('.glass-panel').classList.add('scale-95');
+                }
+            },
+
+            renderShortcutsList() {
+                const list = document.getElementById('shortcuts-list');
+                list.innerHTML = '';
+                
+                const actions = [
+                    { id: 'bold', label: 'Bold' },
+                    { id: 'italic', label: 'Italic' },
+                    { id: 'strike', label: 'Strikethrough' },
+                    { id: 'code', label: 'Code Block' },
+                    { id: 'link', label: 'Insert Link' },
+                    { id: 'save', label: 'Save (No Browser Dialog)' }
+                ];
+
+                actions.forEach(action => {
+                    // Find key for this action
+                    const key = Object.keys(this.state.config.shortcuts).find(k => this.state.config.shortcuts[k] === action.id) || '';
+                    
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center justify-between p-2 bg-white/5 rounded border border-white/5 hover:bg-white/10 transition-colors';
+                    div.innerHTML = `
+                        <span class="text-sm">${action.label}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-zinc-500">Ctrl + </span>
+                            <input type="text" 
+                                value="${key.toUpperCase()}" 
+                                class="w-12 bg-black/30 border border-white/10 rounded text-center text-xs p-1 uppercase focus:border-blue-500 outline-none font-mono"
+                                onkeyup="app.updateShortcut('${action.id}', this)"
+                                maxlength="1"
+                            >
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            },
+
+            updateShortcut(actionId, inputEl) {
+                const newKey = inputEl.value.toLowerCase();
+                if (!newKey) return;
+                
+                // Remove old key for this action
+                Object.keys(this.state.config.shortcuts).forEach(k => {
+                    if (this.state.config.shortcuts[k] === actionId) delete this.state.config.shortcuts[k];
+                });
+                
+                // Assign new key
+                this.state.config.shortcuts[newKey] = actionId;
+                this.saveConfig();
+            },
+            
+            resetShortcuts() {
+                this.state.config.shortcuts = {
+                    'b': 'bold',
+                    'i': 'italic',
+                    's': 'save',
+                    'k': 'link',
+                    'e': 'code'
+                };
+                this.saveConfig();
+                this.renderShortcutsList();
+            },
+
+
+            setupMarked() {
+                // Ensure markedHighlight is available
+                if (typeof markedHighlight === 'undefined') {
+                    console.error('Marked Highlight not loaded');
+                    return;
+                }
+
+                const renderer = new marked.Renderer();
+                
+                // Custom Checkbox
+                renderer.checkbox = (checked) => `<input type="checkbox" ${checked ? 'checked' : ''} disabled style="accent-color: #3b82f6; margin-right: 0.5em;">`;
+
+                // Configure Marked
+                marked.use(
+                    markedHighlight.markedHighlight({
+                        langPrefix: 'hljs language-',
+                        highlight(code, lang) {
+                            const language = highlight.getLanguage(lang) ? lang : 'plaintext';
+                            return highlight.highlight(code, { language }).value;
+                        }
+                    }),
+                    { 
+                        renderer,
+                        gfm: true, 
+                        breaks: true 
+                    },
+                    markedKatex({ throwOnError: false }),
+                    markedFootnote()
+                );
+            },
+
+            setupEvents() {
+                const ta = document.getElementById('editor-textarea');
+                
+                // Live Preview
+                ta.addEventListener('input', (e) => this.handleInput(e));
+                
+                // Scroll Sync
+                ta.addEventListener('scroll', () => {
+                    const preview = document.getElementById('preview-container');
+                    const percent = ta.scrollTop / (ta.scrollHeight - ta.clientHeight);
+                    if(!isNaN(percent)) preview.scrollTop = percent * (preview.scrollHeight - preview.clientHeight);
+                });
+
+                // Keybindings
+                ta.addEventListener('keydown', (e) => this.handleKey(e));
+
+                // Context Menu
+                ta.addEventListener('contextmenu', (e) => { e.preventDefault(); this.showContext(e); });
+                document.addEventListener('click', (e) => {
+                    if(!e.target.closest('#context-menu')) this.hideContext();
+                });
+
+                // Tooltips
+                const tip = document.getElementById('tooltip');
+                document.querySelectorAll('[data-tooltip]').forEach(el => {
+                    el.addEventListener('mouseenter', e => {
+                        tip.textContent = el.getAttribute('data-tooltip');
+                        tip.style.opacity = '1';
+                        tip.style.transform = 'translateY(0)';
+                        const rect = el.getBoundingClientRect();
+                        tip.style.left = (rect.left + rect.width/2 - tip.offsetWidth/2) + 'px';
+                        tip.style.top = (rect.bottom + 8) + 'px';
+                    });
+                    el.addEventListener('mouseleave', () => {
+                        tip.style.opacity = '0';
+                        tip.style.transform = 'translateY(4px)';
+                    });
+                });
+
+                // Meta Binding
+                ['title','slug','date','tags','authors'].forEach(id => {
+                    document.getElementById(`meta-${id}`).addEventListener('input', () => this.updateMeta());
+                });
+                ['featured','draft'].forEach(id => {
+                    document.getElementById(`meta-${id}`).addEventListener('change', () => this.updateMeta());
+                });
+            },
+
+            // --- Logic ---
+            checkSession() {
+                if(localStorage.getItem('zenith_content')) {
+                    document.getElementById('restore-btn').classList.remove('hidden');
+                    this.hasSession = true;
+                } else {
+                    this.hasSession = false;
+                    this.showWelcome();
+                }
+            },
+
+            showWelcome() {
+                const m = document.getElementById('welcome-modal');
+                m.style.pointerEvents = 'auto';
+                gsap.to(m, { opacity: 1, duration: 0.3 });
+                gsap.to(m.querySelector('.glass-panel'), { scale: 1, duration: 0.4, ease: "back.out(1.5)" });
+            },
+
+            hideWelcome() {
+                const m = document.getElementById('welcome-modal');
+                m.style.pointerEvents = 'none';
+                gsap.to(m, { opacity: 0, duration: 0.2 });
+                gsap.to(m.querySelector('.glass-panel'), { scale: 0.95, duration: 0.2 });
+                
+                document.getElementById('main-app').classList.remove('opacity-0');
+            },
+
+            newDoc() {
+                this.state.content = "# New Post\n\nStart writing here...";
+                this.state.meta = { title: 'New Post', slug: 'new-post', date: new Date().toISOString().split('T')[0], tags:[], authors:[] };
+                this.hideWelcome();
+                this.syncUI();
+            },
+
+            restoreSession() {
+                this.state.content = localStorage.getItem('zenith_content') || "";
+                try {
+                    const m = JSON.parse(localStorage.getItem('zenith_meta') || "{}");
+                    this.state.meta = {...this.state.meta, ...m};
+                } catch(e){}
+                this.hideWelcome();
+                this.syncUI();
+            },
+
+            handleFileUpload(file) {
+                if(!file) return;
+                const r = new FileReader();
+                r.onload = e => {
+                    const txt = e.target.result;
+                    const fm = /^---\n([\s\S]+?)\n---\n([\s\S]*)$/.exec(txt);
+                    if(fm) {
+                        try {
+                            const m = jsyaml.load(fm[1]);
+                            this.state.meta = {...this.state.meta, ...m};
+                            this.state.content = fm[2];
+                        } catch(e){ this.state.content = txt; }
+                    } else {
+                        this.state.content = txt;
+                    }
+                    if(file.name !== 'index') this.state.meta.slug = file.name.replace(/\.[^/.]+$/, "");
+                    this.hideWelcome();
+                    this.syncUI();
+                };
+                r.readAsText(file);
+            },
+
+            handleInput(e) {
+                this.state.content = e.target.value;
+                this.render();
+                this.save();
+            },
+
+            handleKey(e) {
+                // Configured Shortcuts (Ctrl + Key)
+                if (e.ctrlKey || e.metaKey) {
+                    const key = e.key.toLowerCase();
+                    const action = this.state.config.shortcuts[key];
+                    
+                    if (action) {
+                        e.preventDefault(); // Prevent browser default (e.g. Save, Print)
+                        
+                        if (action === 'save') {
+                            this.save(true); // Force visual feedback
+                        } else {
+                            editor.format(action);
+                        }
+                        return;
+                    }
+                }
+
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    document.execCommand('insertText', false, '  ');
+                }
+                
+                if (e.key === 'Enter') {
+                    const ta = e.target;
+                    const start = ta.selectionStart;
+                    const val = ta.value;
+                    const prevLineStart = val.lastIndexOf('\n', start - 1) + 1;
+                    const currentLine = val.substring(prevLineStart, start);
+                    
+                    const listRegex = /^(\s*)([-*] )/;
+                    const numRegex = /^(\s*)(\d+)\. /;
+                    const taskRegex = /^(\s*)([-*] \[ \]) /;
+
+                    let match;
+                    if (match = currentLine.match(taskRegex)) {
+                        e.preventDefault();
+                        document.execCommand('insertText', false, '\n' + match[1] + match[2] + ' ');
+                    } else if (match = currentLine.match(listRegex)) {
+                        e.preventDefault();
+                        document.execCommand('insertText', false, '\n' + match[1] + match[2]);
+                    } else if (match = currentLine.match(numRegex)) {
+                        e.preventDefault();
+                        const num = parseInt(match[2]) + 1;
+                        document.execCommand('insertText', false, '\n' + match[1] + num + '. ');
+                    }
+                }
+            },
+
+            syncUI() {
+                document.getElementById('editor-textarea').value = this.state.content;
+                
+                // Meta
+                document.getElementById('meta-title').value = this.state.meta.title || '';
+                document.getElementById('meta-slug').value = this.state.meta.slug || '';
+                document.getElementById('meta-date').value = this.state.meta.date instanceof Date ? this.state.meta.date.toISOString().split('T')[0] : this.state.meta.date;
+                document.getElementById('meta-authors').value = this.state.meta.authors.join(', ');
+                document.getElementById('meta-tags').value = this.state.meta.tags.join(', ');
+                document.getElementById('meta-featured').checked = !!this.state.meta.featured;
+                document.getElementById('meta-draft').checked = !!this.state.meta.draft;
+                
+                document.getElementById('doc-title-display').innerText = this.state.meta.title || 'Untitled';
+                this.render();
+            },
+
+            updateMeta() {
+                this.state.meta.title = document.getElementById('meta-title').value;
+                this.state.meta.slug = document.getElementById('meta-slug').value;
+                this.state.meta.date = document.getElementById('meta-date').value;
+                this.state.meta.authors = document.getElementById('meta-authors').value.split(',').map(s=>s.trim()).filter(Boolean);
+                this.state.meta.tags = document.getElementById('meta-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
+                this.state.meta.featured = document.getElementById('meta-featured').checked;
+                this.state.meta.draft = document.getElementById('meta-draft').checked;
+                
+                document.getElementById('doc-title-display').innerText = this.state.meta.title || 'Untitled';
+                this.save();
+            },
+
+            render() {
+                try {
+                    const html = DOMPurify.sanitize(marked.parse(this.state.content));
+                    document.getElementById('preview-container').innerHTML = html;
+                } catch(e) { console.error(e); }
+            },
+
+            save(forceNotify = false) {
+                localStorage.setItem('zenith_content', this.state.content);
+                localStorage.setItem('zenith_meta', JSON.stringify(this.state.meta));
+                const status = document.getElementById('save-status');
+                
+                if (forceNotify || Math.random() > 0.7) { // Periodic or forced visual update
+                    status.innerText = "Saving...";
+                    status.className = "text-[10px] text-blue-400";
+                    
+                    clearTimeout(this._st);
+                    this._st = setTimeout(() => {
+                        status.innerText = "All changes saved";
+                        status.className = "text-[10px] text-zinc-500";
+                    }, 800);
+                }
+            },
+
+            toggleMeta() {
+                const sb = document.getElementById('meta-sidebar');
+                if(sb.classList.contains('-translate-x-full')) sb.classList.remove('-translate-x-full');
+                else sb.classList.add('-translate-x-full');
+            },
+
+            showContext(e) {
+                const m = document.getElementById('context-menu');
+                m.classList.remove('hidden');
+                let x = e.clientX, y = e.clientY;
+                if(x + 200 > window.innerWidth) x -= 200;
+                m.style.left = x + 'px';
+                m.style.top = y + 'px';
+                gsap.fromTo(m, {opacity:0, scale:0.95}, {opacity:1, scale:1, duration:0.15, ease:"power2.out"});
+            },
+
+            hideContext() {
+                document.getElementById('context-menu').classList.add('hidden');
+            },
+
+            exportFile() {
+                const meta = {...this.state.meta};
+                if(!meta.tags.length) delete meta.tags;
+                if(!meta.authors.length) delete meta.authors;
+                const yaml = jsyaml.dump(meta);
+                const text = `---\n${yaml}---\n${this.state.content}`;
+                const b = new Blob([text],{type:'text/markdown'});
+                const u = URL.createObjectURL(b);
+                const a = document.createElement('a');
+                a.href = u;
+                a.download = (meta.slug || 'post') + '.mdx';
+                a.click();
+                URL.revokeObjectURL(u);
+            }
+        };
+
+        const editor = {
+            el() { return document.getElementById('editor-textarea'); },
+            format(type, arg) {
+                const ta = this.el();
+                ta.focus();
+                const start = ta.selectionStart, end = ta.selectionEnd;
+                const sel = ta.value.substring(start, end);
+                let text = '';
+                
+                switch(type) {
+                    case 'heading': text = '#'.repeat(arg) + ' ' + (sel || 'Heading'); break;
+                    case 'bold': text = `**${sel || 'text'}**`; break;
+                    case 'italic': text = `_${sel || 'text'}_`; break;
+                    case 'strike': text = `~~${sel || 'text'}~~`; break;
+                    case 'list': text = `- ${sel || 'item'}`; break;
+                    case 'ordered': text = `1. ${sel || 'item'}`; break;
+                    case 'task': text = `- [ ] ${sel || 'task'}`; break;
+                    case 'code': text = sel.includes('\n') ? `\`\`\`\n${sel || 'code'}\n\`\`\`` : `\`\`\`${sel || 'code'}\`\`\``; break;
+                    case 'quote': text = `> ${sel || 'quote'}`; break;
+                    case 'link': text = `[${sel || 'text'}](url)`; break;
+                    case 'image': text = `![${sel || 'alt'}](url)`; break;
+                    case 'file': text = `[${sel || 'Download File'}](url)`; break;
+                    case 'table': text = `| Header 1 | Header 2 |\n| :--- | :--- |\n| Cell 1 | Cell 2 |`; break;
+                    case 'math': text = sel.includes('\n') ? `$$\n${sel || 'x = y^2'}\n$$` : `$${sel || 'x'}$`; break;
+                    case 'details': text = `<details>\n<summary>${sel || 'Title'}</summary>\n\nContent\n</details>`; break;
+                    case 'footnote': text = `[^1]\n\n[^1]: ${sel || 'Footnote'}`; break;
+                }
+                document.execCommand('insertText', false, text);
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
