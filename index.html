@@ -203,6 +203,7 @@
             padding-top: 1.5rem; /* Space for buttons */
             overflow-x: auto;
             background: transparent !important; /* Override hljs bg */
+            color: inherit;
         }
 
         /* Inline Code (Updated for clearer distinction) */
@@ -709,18 +710,31 @@
                     return;
                 }
 
-                const renderer = new marked.Renderer();
-                
-                // Custom Checkbox
-                renderer.checkbox = (checked) => `<input type="checkbox" ${checked ? 'checked' : ''} disabled style="accent-color: #3b82f6; margin-right: 0.5em;">`;
+                // Fix: Access the function directly
+                const highlightFn = (typeof markedHighlight === 'function') 
+                    ? markedHighlight 
+                    : (markedHighlight.markedHighlight || undefined);
+
+                if(!highlightFn) {
+                    console.error("Could not find markedHighlight function");
+                    return;
+                }
+
+                // Define Renderer as plain object to avoid prototype conflicts
+                const renderer = {
+                    checkbox(checked) {
+                        return `<input type="checkbox" ${checked ? 'checked' : ''} disabled style="accent-color: #3b82f6; margin-right: 0.5em;">`;
+                    }
+                };
 
                 // Configure Marked
                 marked.use(
-                    markedHighlight.markedHighlight({
+                    highlightFn({
                         langPrefix: 'hljs language-',
                         highlight(code, lang) {
-                            const language = highlight.getLanguage(lang) ? lang : 'plaintext';
-                            return highlight.highlight(code, { language }).value;
+                            // Fix: Use global 'hljs' instead of 'highlight' recursion
+                            const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                            return hljs.highlight(code, { language }).value;
                         }
                     }),
                     { 
